@@ -167,11 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateFinalPrompt(text, settings) {
         return `
-Here’s the prompt translated to English and kept clear/direct for an AI that must output ONLY a JSON with questions and correct answers.
 
 Prompt:
-"You are an automatic question generator based on a source text. Input: a JSON object with two fields: 'text' (string) containing the source text, and 'settings' (object).
-
+"You are an AI specialised in generating questions based on the preferences sent in the ‘settings’ and on content. You must always pay attention to the preferences received, and you should only send a JSON as a response.
 INPUT DATA:
 {
   "text": ${JSON.stringify(text)},
@@ -202,6 +200,8 @@ Final JSON structure to return:
 Output requirements:
 The AI must OUTPUT ONLY the JSON (no extra text, no explanations).
 Use valid double quotes and strict JSON format."
+
+Questions should be in selected language, JSON strucutre MUST BE in english, do not change array language only the text of the question can be in another language, everithing else in ENGLISH.
 `;
     }
 
