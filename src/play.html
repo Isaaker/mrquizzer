@@ -13,12 +13,19 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <link rel="stylesheet" href="settings.css">
     <style>
-        /* Specific styles for play mode */
         .quiz-container { max-width: 600px; margin: 0 auto; text-align: left; }
-        .progress-container { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-bottom: 2rem; overflow: hidden; }
+        .progress-container { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-bottom: 1rem; overflow: hidden; }
         #progress-bar { height: 100%; background: #333; width: 0%; transition: width 0.3s ease; }
+        
+        .timer-badge { 
+            display: inline-block; padding: 4px 12px; background: #f0f0f0; 
+            border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 1rem;
+        }
+
         .question-card { animation: fadeIn 0.5s ease; }
         .option-btn { 
             display: block; width: 100%; padding: 15px; margin-bottom: 10px; 
@@ -26,18 +33,21 @@
             text-align: left; cursor: pointer; transition: 0.2s; font-size: 1rem;
         }
         .option-btn:hover { border-color: #333; background: #f9f9f9; }
-        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
-        .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .option-btn.correct { background: #d4edda ! aspiration; border-color: #28a745; color: #155724; }
+        .option-btn.wrong { background: #f8d7da !important; border-color: #dc3545; color: #721c24; }
+        
         .explanation-box { 
             margin-top: 20px; padding: 15px; background: #e7f3ff; 
             border-left: 4px solid #007bff; border-radius: 4px; display: none; 
         }
-        .feedback-icon { font-size: 1.5rem; margin-right: 10px; }
+
         .score-circle { 
-            width: 120px; height: 120px; border-radius: 50%; border: 8px solid #333;
+            width: 140px; height: 140px; border-radius: 50%; border: 8px solid #333;
             display: flex; align-items: center; justify-content: center; 
-            font-size: 2rem; font-weight: bold; margin: 20px auto;
+            font-size: 2.2rem; font-weight: bold; margin: 20px auto;
+            transition: all 0.5s ease;
         }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -47,13 +57,15 @@
     <main class="glass-card">
         <div id="quiz-setup">
             <div class="quiz-container">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="timer-badge">⏱️ Time: <span id="timer-display">00:00</span></div>
+                    <button onclick="resetCurrentProgress()" class="btn-small" style="font-size: 0.7rem; padding: 2px 8px;">Reset Progress</button>
+                </div>
                 <div class="progress-container">
                     <div id="progress-bar"></div>
                 </div>
                 
-                <div id="question-area" class="question-card">
-                    </div>
-
+                <div id="question-area" class="question-card"></div>
                 <div id="explanation-area" class="explanation-box"></div>
 
                 <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
@@ -65,12 +77,45 @@
         <div id="results-screen" class="hidden">
             <h2 id="result-title">Quiz Completed!</h2>
             <div class="score-circle" id="score-display">0%</div>
-            <p id="result-text" class="subtitle">You answered X out of Y correctly.</p>
-            <div class="cta-container">
+            <p id="result-text" class="subtitle">Score: 0 out of 0</p>
+            <p id="time-result" style="font-weight: bold; margin-bottom: 20px;"></p>
+            
+            <div class="social-share-container" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;">
+                <button onclick="shareResults('whatsapp')" class="btn-small" style="background:#25d366; color:white; border:none;">WhatsApp</button>
+                <button onclick="shareResults('twitter')" class="btn-small" style="background:#1DA1F2; color:white; border:none;">X (Twitter)</button>
+                <button onclick="copyTestLink()" class="btn-small" style="background:#6e8efb; color:white; border:none;">🔗 Share Test</button>
+                <button onclick="copyToClipboard()" class="btn-small">Copy Score 📋</button>
+            </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+            <button onclick="toggleRegenerate()" class="btn-small" style="width:100%; margin-bottom:10px; background:#f0f0f0;">
+                🔄 Regenerate New Questions (Options)
+            </button>
+            
+            <div id="regenerate-container" class="hidden" style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <h3>Get New Questions</h3>
+                <p class="step-desc" style="font-size: 0.85rem;">This will exclude the questions you just answered.</p>
+                
+                <div class="ai-buttons" style="display: grid; gap: 8px; margin: 15px 0;">
+                    <button class="ai-btn" onclick="regeneratePrompt('chatgpt')">🤖 Open ChatGPT</button>
+                    <button class="ai-btn" onclick="regeneratePrompt('perplexity')">✨ Open Perplexity</button>
+                    <button class="ai-btn" onclick="copyRegeneratePrompt()">📋 Copy Prompt</button>
+                </div>
+
+                <textarea id="json-input-new" class="code-area" placeholder="Paste NEW JSON here..." style="width:100%; min-height:80px;"></textarea>
+                <button id="btn-load-new" class="btn-start" style="width:100%; margin-top:10px;">Load New Quiz 🚀</button>
+            </div>
+
+            <div class="cta-container" style="display: flex; flex-direction: column; gap: 10px;">
                 <button onclick="location.href='settings.html'" class="btn-start">Try Another Topic</button>
-                <button onclick="location.reload()" class="btn-small" style="margin-top:10px">Restart Quiz</button>
+                <button onclick="clearProgressAndReload()" class="btn-small">Restart Current Quiz</button>
             </div>
         </div>
+
+        <footer>
+            <p>&copy; Isaac Hernán (Isaaker) - <a href="https://github.com/Isaaker/mrquizzer" target="_blank">GitHub</a></p>
+        </footer>
     </main>
 
     <script src="play.js"></script>

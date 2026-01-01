@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Shared Quiz - MrQuizzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="settings.css">
+    <style>
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            text-align: center;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #333;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <main class="glass-card">
+        <div class="loading-container">
+            <div id="status-icon" class="loader"></div>
+            <h2 id="status-title">Importing Shared Quiz...</h2>
+            <p id="status-msg" class="subtitle">Please wait while we set up your questions.</p>
+            
+            <div id="error-actions" class="hidden" style="margin-top: 20px;">
+                <button onclick="window.location.href='settings.html'" class="btn-start">Go to Settings</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusTitle = document.getElementById('status-title');
+            const statusMsg = document.getElementById('status-msg');
+            const statusIcon = document.getElementById('status-icon');
+            const errorActions = document.getElementById('error-actions');
+
+            // 1. Get the URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('test');
+
+            if (!encodedData) {
+                showError("No Quiz Data Found", "The link seems to be incomplete or broken.");
+                return;
+            }
+
+            try {
+                // 2. Decode Base64 (using the same method as play.js)
+                const decodedJson = decodeURIComponent(escape(atob(encodedData)));
+                const quizData = JSON.parse(decodedJson);
+
+                // 3. Simple Validation
+                if (!quizData.questions || !Array.isArray(quizData.questions)) {
+                    throw new Error("Invalid quiz format");
+                }
+
+                // 4. Save to sessionStorage
+                sessionStorage.setItem('mrquizzer_data', JSON.stringify(quizData));
+                
+                // Optional: Clear any previous progress in localStorage to start fresh
+                localStorage.removeItem('mq_current_idx');
+                localStorage.removeItem('mq_score');
+                localStorage.removeItem('mq_timer');
+
+                // 5. Success Redirect
+                statusTitle.textContent = "Quiz Loaded!";
+                statusMsg.textContent = "Redirecting you to the play area...";
+                
+                setTimeout(() => {
+                    window.location.href = 'play.html';
+                }, 1200);
+
+            } catch (e) {
+                console.error("Import Error:", e);
+                showError("Import Failed", "We couldn't read the quiz data. The link might be corrupted.");
+            }
+
+            function showError(title, message) {
+                statusTitle.textContent = title;
+                statusMsg.textContent = message;
+                statusIcon.style.display = 'none';
+                errorActions.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
