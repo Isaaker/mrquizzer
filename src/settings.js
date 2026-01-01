@@ -176,6 +176,8 @@ INPUT DATA:
   "settings": ${JSON.stringify(settings)}
 }
 
+If attach_additional_documents flag is Yes, expect more files from user in the chat. If not additional files included by user, ask for them before starting the question generation.
+
 Generation rules:
 Generate exactly 'number_of_questions' questions. If the text lacks sufficient explicit facts, create inference questions consistent with the specified 'difficulty'.
 For each question produce an object with these fields:

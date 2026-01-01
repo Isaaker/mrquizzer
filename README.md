@@ -1,7 +1,7 @@
 # README
 
+[!](./src/images/banner.png)
 
-## Status:
+## Status
 
-[![Semgrep](https://github.com/Isaaker/Ghost_Simulator_ES/actions/workflows/semgrep.yml/badge.svg)](https://github.com/Isaaker/Ghost_Simulator_ES/actions/workflows/semgrep.yml)
-
+[![Semgrep](https://github.com/Isaaker/Ghost_Simulator_ES/actions/workflows/semgrep.yml/badge.svg)](https://github.com/Isaaker Ghost_Simulator_ES/actions/workflows/semgrep.yml)
