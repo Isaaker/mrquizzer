@@ -15,6 +15,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+    <script>
+    window.MathJax = {
+        tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        svg: { fontCache: 'global' }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <link rel="stylesheet" href="settings.css">
     <style>
         .quiz-container { max-width: 600px; margin: 0 auto; text-align: left; }
@@ -33,7 +44,7 @@
             text-align: left; cursor: pointer; transition: 0.2s; font-size: 1rem;
         }
         .option-btn:hover { border-color: #333; background: #f9f9f9; }
-        .option-btn.correct { background: #d4edda ! aspiration; border-color: #28a745; color: #155724; }
+        .option-btn.correct { background: #d4edda !important; border-color: #28a745; color: #155724; }
         .option-btn.wrong { background: #f8d7da !important; border-color: #dc3545; color: #721c24; }
         
         .explanation-box { 
@@ -47,6 +58,19 @@
             font-size: 2.2rem; font-weight: bold; margin: 20px auto;
             transition: all 0.5s ease;
         }
+
+        /* Review Styles */
+        .review-item { 
+            background: #fff; border: 1px solid #eee; border-radius: 12px; 
+            padding: 15px; margin-bottom: 15px; text-align: left; border-left: 5px solid #ddd;
+        }
+        .review-item.is-correct { border-left-color: #28a745; }
+        .review-item.is-wrong { border-left-color: #dc3545; }
+        .review-q { font-weight: bold; margin-bottom: 10px; display: block; font-size: 1rem; }
+        .review-ans { font-size: 0.9rem; margin-bottom: 5px; }
+        .text-success { color: #28a745; font-weight: bold; }
+        .text-danger { color: #dc3545; font-weight: bold; }
+        .text-skipped { color: #666; font-style: italic; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -89,20 +113,23 @@
 
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
 
+            <button onclick="toggleReview()" class="btn-small" style="width:100%; margin-bottom:10px; background:#eef2ff; border: 1px solid #6366f1;">
+                🔍 Review Answers & Explanations
+            </button>
+            <div id="review-container" class="hidden" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; padding: 10px; background: #fcfcfc; border-radius: 8px; border: 1px inset #eee;">
+            </div>
+
             <button onclick="toggleRegenerate()" class="btn-small" style="width:100%; margin-bottom:10px; background:#f0f0f0;">
                 🔄 Regenerate New Questions (Options)
             </button>
             
             <div id="regenerate-container" class="hidden" style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
                 <h3>Get New Questions</h3>
-                <p class="step-desc" style="font-size: 0.85rem;">This will exclude the questions you just answered.</p>
-                
                 <div class="ai-buttons" style="display: grid; gap: 8px; margin: 15px 0;">
                     <button class="ai-btn" onclick="regeneratePrompt('chatgpt')">🤖 Open ChatGPT</button>
                     <button class="ai-btn" onclick="regeneratePrompt('perplexity')">✨ Open Perplexity</button>
                     <button class="ai-btn" onclick="copyRegeneratePrompt()">📋 Copy Prompt</button>
                 </div>
-
                 <textarea id="json-input-new" class="code-area" placeholder="Paste NEW JSON here..." style="width:100%; min-height:80px;"></textarea>
                 <button id="btn-load-new" class="btn-start" style="width:100%; margin-top:10px;">Load New Quiz 🚀</button>
             </div>

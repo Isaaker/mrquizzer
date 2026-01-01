@@ -202,6 +202,7 @@ Final JSON structure to return:
 Output requirements:
 The AI must OUTPUT ONLY the JSON (no extra text, no explanations).
 Use valid double quotes and strict JSON format."
+If the answer contains formulas or mathematical expresions, use LaTeX for answer.
 
 Questions should be in selected language, JSON strucutre MUST BE in english, do not change array language only the text of the question can be in another language, everithing else in ENGLISH.
 `;
