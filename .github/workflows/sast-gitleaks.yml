@@ -1,0 +1,15 @@
+name: SAST GitLeaks
+on:
+  pull_request: {}
+  push: {}
+  workflow_dispatch:
+jobs:
+  sast_semgrep:
+    permissions:                                                                         
+      contents: read
+    uses: ramshackle-code/sast_gitleaks/.github/workflows/sast_gitleaks.yml@0de5a68b4c898df6928e8913759357d5e95a86a6   #v1.3.1
+    with:
+      fetch-depth: 0
+      gitleaks-config: 'cfg/gitleaks.toml'
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
