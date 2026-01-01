@@ -1,9 +1,7 @@
+/* --- ESTILOS CSS --- */
+
 /* Reset básico */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: "Ubuntu", sans-serif;
@@ -12,16 +10,13 @@ body {
     justify-content: center;
     align-items: center;
     color: #333;
-    overflow-x: hidden;
+    overflow-x: hidden; /* Evita scroll horizontal */
 }
 
-/* --- Tu Fondo Geométrico (Ajustado) --- */
+/* Tu Fondo Geométrico */
 .bg-pattern {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     z-index: -1;
     --s: 84px;
     --c1: #f2f2f2;
@@ -38,135 +33,97 @@ body {
     background-size: calc(var(--s) * 1.732) var(--s);
 }
 
-/* --- Tarjeta estilo Glassmorphism --- */
+/* Tarjeta Central (Efecto Cristal) */
 .glass-card {
-    background: rgba(255, 255, 255, 0.85); /* Blanco semitransparente */
-    backdrop-filter: blur(12px); /* Efecto borroso detrás */
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.9); /* Más blanco para asegurar contraste */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     width: 90%;
     max-width: 700px;
     border-radius: 20px;
     padding: 3rem 2rem;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     text-align: center;
     margin: 20px;
-    
-    /* Animación inicial */
-    opacity: 0;
-    transform: translateY(30px);
-    transition: all 0.8s ease-out;
 }
 
-/* Clase para activar la animación con JS */
-.glass-card.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* --- Tipografía y Elementos --- */
+/* Tipografía */
 h1 {
     font-size: 2.5rem;
-    color: #444;
+    font-weight: 700;
+    color: #333;
     margin-bottom: 1rem;
-    letter-spacing: -1px;
-}
-
-.main-banner {
-    max-width: 100%;
-    height: auto;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    /* Sombra suave a la imagen */
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
 }
 
 .subtitle {
     font-size: 1.2rem;
     color: #666;
     margin-bottom: 2rem;
+    font-weight: 500;
 }
 
-/* --- Features Section --- */
-.features {
-    margin: 2rem 0;
+/* Banner */
+.banner-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
+
+/* Features */
+.features { margin: 2rem 0; }
 
 .badge {
-    background-color: #333;
+    background: #222;
     color: #fff;
-    padding: 5px 12px;
+    padding: 5px 15px;
     border-radius: 50px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 .features-grid {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     flex-wrap: wrap;
+    gap: 2rem;
     margin-top: 1.5rem;
-    gap: 1rem;
 }
 
-.feature-item h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-    color: #333;
-}
+.feature-item h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+.feature-item p { font-size: 0.9rem; color: #555; }
 
-.feature-item p {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-/* --- Botón --- */
+/* Botón CTA */
 .btn-start {
     display: inline-block;
-    background: #222;
+    background: #333;
     color: #fff;
     padding: 15px 40px;
     border-radius: 30px;
     text-decoration: none;
     font-size: 1.2rem;
+    font-weight: 700;
     margin-top: 2rem;
-    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 .btn-start:hover {
     background: #000;
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
 
-.btn-start:active {
-    transform: translateY(-1px);
-}
-
-/* --- Footer --- */
+/* Footer */
 footer {
     margin-top: 3rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(0,0,0,0.1);
+    border-top: 1px solid #ddd;
     font-size: 0.8rem;
     color: #777;
 }
-
-footer a {
-    color: #333;
-    text-decoration: none;
-    font-weight: 500;
-    border-bottom: 1px dotted #333;
-}
-
-footer a:hover {
-    border-bottom: 1px solid #333;
-}
-
-/* Utilidades de fuente (del código original) */
-.ubuntu-light { font-weight: 300; }
-.ubuntu-regular { font-weight: 400; }
-.ubuntu-medium { font-weight: 500; }
-.ubuntu-bold { font-weight: 700; }
+footer a { color: #333; text-decoration: none; font-weight: bold; }
+footer a:hover { text-decoration: underline; }

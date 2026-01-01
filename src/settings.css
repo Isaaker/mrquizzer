@@ -1,0 +1,349 @@
+/* --- BASE & FONDO (Igual que landing) --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: "Ubuntu", sans-serif;
+    min-height: 100vh;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.bg-pattern {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    --s: 84px;
+    --c1: #f2f2f2;
+    --c2: #cdcbcc;
+    --c3: #999999;
+    --_g: 0 120deg, #0000 0;
+    background: conic-gradient(from 0deg at calc(500% / 6) calc(100% / 3), var(--c3) var(--_g)),
+                conic-gradient(from -120deg at calc(100% / 6) calc(100% / 3), var(--c2) var(--_g)),
+                conic-gradient(from 120deg at calc(100% / 3) calc(500% / 6), var(--c1) var(--_g)),
+                conic-gradient(from 120deg at calc(200% / 3) calc(500% / 6), var(--c1) var(--_g)),
+                conic-gradient(from -180deg at calc(100% / 3) 50%, var(--c2) 60deg, var(--c1) var(--_g)),
+                conic-gradient(from 60deg at calc(200% / 3) 50%, var(--c1) 60deg, var(--c3) var(--_g)),
+                conic-gradient(from -60deg at 50% calc(100% / 3), var(--c1) 120deg, var(--c2) 0 240deg, var(--c3) 0);
+    background-size: calc(var(--s) * 1.732) var(--s);
+}
+
+/* --- TARJETA PRINCIPAL --- */
+.glass-card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    width: 100%;
+    max-width: 800px;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.6);
+    margin-bottom: 2rem;
+}
+
+.hidden { display: none !important; }
+
+/* HEADER */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.btn-small {
+    background: #f0f0f0;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: 0.2s;
+}
+.btn-small:hover { background: #e0e0e0; }
+
+/* --- STEP SECTIONS --- */
+.step-section {
+    margin-bottom: 2.5rem;
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.step-number {
+    background: #333;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 12px;
+}
+
+/* --- STEP 1: TERMINAL INPUT STYLE (Dark) --- */
+.terminal-container {
+    width: 100%;
+}
+.terminal-box {
+    background-color: #000;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.textarea-wrapper {
+    position: relative;
+    min-height: 120px;
+}
+
+#source-text {
+    width: 100%;
+    height: 150px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 1rem;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    line-height: 1.5;
+}
+#source-text::placeholder { color: rgba(255,255,255,0.4); }
+
+/* Loading Overlay inside Terminal */
+.loading-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 10;
+}
+.spinner {
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.terminal-footer {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+}
+
+.toolbar-left { display: flex; gap: 8px; }
+
+.tool-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 8px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tool-btn:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.3);
+}
+.text-blue { color: #3b82f6; }
+.text-blue:hover { color: #60a5fa; }
+
+/* --- STEP 2: SETTINGS GRID --- */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+@media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; } }
+
+.setting-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.setting-group.full-width { grid-column: 1 / -1; }
+
+.setting-group label { font-weight: 500; font-size: 0.9rem; }
+
+.input-select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    font-family: inherit;
+}
+
+/* Checkboxes */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 5px;
+}
+.check-box {
+    background: #f4f4f4;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+}
+.check-box:has(input:checked) {
+    background: #333;
+    color: #fff;
+}
+
+/* Toggle Switch */
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+.toggle-switch {
+    width: 40px; height: 22px;
+    background: #ccc;
+    border-radius: 20px;
+    position: relative;
+    transition: 0.3s;
+}
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+input[type="checkbox"]:checked + .toggle-switch { background: #333; }
+input[type="checkbox"]:checked + .toggle-switch::after { transform: translateX(18px); }
+input[type="checkbox"] { display: none; } /* Hide default checkbox inside toggle */
+
+/* --- STEP 3: AI BUTTONS --- */
+.ai-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.ai-btn {
+    padding: 10px 20px;
+    background: #fff;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.ai-btn:hover { border-color: #333; background: #fafafa; transform: translateY(-2px); }
+
+/* --- STEP 4: JSON INPUT --- */
+.code-area {
+    width: 100%;
+    height: 120px;
+    font-family: monospace;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    resize: vertical;
+}
+.status-msg {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.status-error { color: #d32f2f; }
+.status-success { color: #2e7d32; }
+
+/* --- STEP 5: BUTTON --- */
+.cta-container { text-align: center; margin-top: 2rem; }
+.btn-start {
+    background: #750550;
+    color: white;
+    border: none;
+    padding: 16px 48px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(117, 5, 80, 0.3);
+}
+.btn-start:hover { background: #5a043d; transform: scale(1.05); }
+.btn-start.disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* --- FOOTER --- */
+footer { margin-top: 3rem; text-align: center; font-size: 0.8rem; color: #666; }
+footer a { color: #333; text-decoration: none; }
+
+/* --- MODAL CSS (Adapted from provided) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-container {
+    background-color: #fff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 30px 0 rgba(0,0,0,0.25);
+    animation: slideUp 0.4s ease;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+.modal-container-header {
+    padding: 16px 32px;
+    border-bottom: 1px solid #ddd;
+}
+.modal-container-title { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+.modal-container-body { padding: 24px 32px; overflow-y: auto; flex: 1; }
+.rtf p { margin-bottom: 1em; color: #555; font-size: 0.95rem; }
+.modal-container-footer {
+    padding: 20px 32px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.button { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 1rem; }
+.button.is-ghost { background: transparent; color: #555; }
+.button.is-ghost:hover { background: #eee; }
+.button.is-primary { background-color: #750550; color: #fff; }
+.button.is-primary:hover { background-color: #4a0433; }
