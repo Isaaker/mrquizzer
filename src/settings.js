@@ -11,11 +11,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
 
-    // --- 1. MODAL LOGIC ---
+    // --- 1. MODAL & TOS CACHE LOGIC ---
+    
+    // Función para verificar si ya se aceptaron los términos anteriormente
+    const checkTOSStatus = () => {
+        const tosAccepted = localStorage.getItem('mrquizzer_tos_accepted');
+        
+        if (tosAccepted === 'true') {
+            // Si ya está aceptado, ocultar modal y mostrar app inmediatamente
+            if (modal) modal.style.display = 'none';
+            if (mainApp) mainApp.classList.remove('hidden');
+            loadCachedSettings();
+        } else {
+            // Si no, asegurar que el modal sea visible
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.opacity = '1';
+            }
+        }
+    };
+
     const btnAccept = document.getElementById('btn-accept');
     if (btnAccept) {
         btnAccept.addEventListener('click', () => {
             if (!modal) return;
+            
+            // Guardar aceptación en localStorage
+            localStorage.setItem('mrquizzer_tos_accepted', 'true');
+            
             modal.style.opacity = '0';
             setTimeout(() => {
                 modal.style.display = 'none';
@@ -29,14 +52,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnDecline) {
         btnDecline.addEventListener('click', () => {
             alert('You must accept the TOS to use MrQuizzer.');
+            localStorage.removeItem('mrquizzer_tos_accepted'); // Asegurar limpieza
             window.location.href = 'index.html';
         });
     }
 
+    // Ejecutar la verificación al cargar
+    checkTOSStatus();
+
     // --- 2. FILE & URL HANDLERS ---
     
     // --- PDF Handler ---
-    document.getElementById('btn-attach-file').addEventListener('click', () => fileInput.click());
+    const btnAttachFile = document.getElementById('btn-attach-file');
+    if (btnAttachFile) {
+        btnAttachFile.addEventListener('click', () => fileInput.click());
+    }
 
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
@@ -48,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Check if PDF.js is loaded
         if (typeof pdfjsLib === 'undefined') {
             alert('Error: PDF.js library is not loaded. Please check your HTML include.');
             return;
@@ -80,65 +109,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Attach Link Handler (UPDATED & FIXED) ---
-    document.getElementById('btn-attach-link').addEventListener('click', async () => {
-        let url = prompt("Enter the URL (Web):");
-        if (!url) return;
+    // --- Attach Link Handler ---
+    const btnAttachLink = document.getElementById('btn-attach-link');
+    if (btnAttachLink) {
+        btnAttachLink.addEventListener('click', async () => {
+            let url = prompt("Enter the URL (Web):");
+            if (!url) return;
 
-        // Ensure protocol exists
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            url = 'https://' + url;
-        }
-
-        showLoading(true, 'Fetching URL content...');
-
-        try {
-            // Use AllOrigins Proxy to bypass CORS
-            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-            
-            const res = await fetch(proxyUrl);
-            if (!res.ok) throw new Error('Proxy returned HTTP ' + res.status);
-            
-            const data = await res.json();
-            
-            if (!data.contents) {
-                throw new Error('No content returned from proxy (Website might strictly block bots).');
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
             }
 
-            // HTML Parsing using DOMParser
-            const rawHtml = data.contents;
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(rawHtml, 'text/html');
+            showLoading(true, 'Fetching URL content...');
 
-            // Remove clutter (scripts, styles, navs, footers, etc)
-            const elementsToRemove = doc.querySelectorAll('script, style, noscript, iframe, svg, nav, footer, header, form, button, aside');
-            elementsToRemove.forEach(el => el.remove());
+            try {
+                const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error('Proxy returned HTTP ' + res.status);
+                
+                const data = await res.json();
+                if (!data.contents) throw new Error('No content returned from proxy.');
 
-            // Extract text
-            let textOnly = doc.body.textContent || "";
-            
-            // Normalize whitespace (replace multiple spaces/newlines with single space)
-            textOnly = textOnly.replace(/\s+/g, ' ').trim();
+                const rawHtml = data.contents;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(rawHtml, 'text/html');
 
-            if (textOnly.length < 50) {
-                throw new Error('Could not extract enough readable text from this URL.');
+                const elementsToRemove = doc.querySelectorAll('script, style, noscript, iframe, svg, nav, footer, header, form, button, aside');
+                elementsToRemove.forEach(el => el.remove());
+
+                let textOnly = doc.body.textContent || "";
+                textOnly = textOnly.replace(/\s+/g, ' ').trim();
+
+                if (textOnly.length < 50) throw new Error('Could not extract enough readable text.');
+
+                const maxChars = 200000;
+                const finalText = textOnly.length > maxChars ? textOnly.slice(0, maxChars) + '\n\n[Truncated]' : textOnly;
+
+                sourceText.value = `Content extracted from: ${url}\n\n` + finalText;
+                saveCache();
+                alert('Link processed successfully.');
+
+            } catch (err) {
+                console.error('Link fetch error:', err);
+                alert('Error fetching link: ' + err.message);
+            } finally {
+                showLoading(false);
             }
-
-            // Truncate if too long (200k chars limit)
-            const maxChars = 200000;
-            const finalText = textOnly.length > maxChars ? textOnly.slice(0, maxChars) + '\n\n[Truncated]' : textOnly;
-
-            sourceText.value = `Content extracted from: ${url}\n\n` + finalText;
-            saveCache();
-            alert('Link processed successfully.');
-
-        } catch (err) {
-            console.error('Link fetch error:', err);
-            alert('Error fetching link: ' + err.message);
-        } finally {
-            showLoading(false);
-        }
-    });
+        });
+    }
 
     // --- 3. SETTINGS & PROMPT GENERATOR ---
     if (sourceText) {
@@ -148,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('change', saveCache);
     });
 
-    // Helper to gather settings
     function getSettings() {
         return {
             language: document.getElementById('set-language')?.value || 'en',
@@ -167,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateFinalPrompt(text, settings) {
         return `
-
 Prompt:
 "You are an AI specialised in generating questions based on the preferences sent in the ‘settings’ and on content. You must always pay attention to the preferences received, and you should only send a JSON as a response.
 INPUT DATA:
@@ -267,7 +283,6 @@ Questions should be in selected language, JSON strucutre MUST BE in english, do 
 
         try {
             let cleanVal = val;
-            // Attempt to find JSON object if user pasted extra text
             const jsonMatch = val.match(/\{[\s\S]*\}/);
             if (jsonMatch) cleanVal = jsonMatch[0];
 
@@ -302,6 +317,7 @@ Questions should be in selected language, JSON strucutre MUST BE in english, do 
     document.getElementById('btn-reset').addEventListener('click', () => {
         if (confirm('Clear everything and start over?')) {
             localStorage.removeItem('mrquizzer_cache');
+            localStorage.removeItem('mrquizzer_tos_accepted'); // Borra también el estado de TOS
             sessionStorage.removeItem('mrquizzer_data');
             location.reload();
         }
@@ -322,7 +338,6 @@ Questions should be in selected language, JSON strucutre MUST BE in english, do 
         const data = {
             text: sourceText?.value || '',
         };
-        // Also save settings state if needed, but text is most important
         localStorage.setItem('mrquizzer_cache', JSON.stringify(data));
     }
 
@@ -339,9 +354,7 @@ Questions should be in selected language, JSON strucutre MUST BE in english, do 
     }
 
     window.onbeforeunload = function() {
-        // Prevent accidental closing if there is content
         if ((sourceText && sourceText.value.length > 50) || (jsonInput && jsonInput.value.length > 50)) {
-            // Modern browsers ignore the return string but show a generic warning
             return "You have unsaved changes.";
         }
     };

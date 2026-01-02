@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. CARGA DE DATOS INICIAL
     const rawData = sessionStorage.getItem('mrquizzer_data');
     if (!rawData) { window.location.href = 'settings.html'; return; }
 
@@ -22,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerDisplay = document.getElementById('timer-display');
     const reviewContainer = document.getElementById('review-container');
 
+    // --- FUNCIONES CORE ---
+
     function renderMath() {
         if (window.MathJax && window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise();
@@ -36,7 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.clearProgressAndReload = () => {
-        localStorage.clear();
+        localStorage.removeItem('mq_current_idx');
+        localStorage.removeItem('mq_score');
+        localStorage.removeItem('mq_timer');
+        localStorage.removeItem('mq_user_answers');
         location.reload();
     };
 
@@ -49,9 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
             secondsElapsed++;
             const mins = Math.floor(secondsElapsed / 60);
             const secs = secondsElapsed % 60;
-            timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            if (timerDisplay) timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }, 1000);
     }
+
+    // --- LÓGICA DE PREGUNTAS ---
 
     function showQuestion(index) {
         if (index >= questions.length) { showResults(); return; }
@@ -97,18 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleMCQ(selectedIndex, clickedBtn) {
         if (isAnswered) return;
         isAnswered = true;
-        
         const q = questions[currentIndex];
         const correctOnes = Array.isArray(q.correct_answers) ? q.correct_answers.map(Number) : [Number(q.correct_answers)];
         const isCorrect = correctOnes.includes(Number(selectedIndex));
 
-        // Resaltado visual inmediato
         document.querySelectorAll('.j-choice').forEach((btn, i) => {
-            if (correctOnes.includes(i)) {
-                btn.classList.add('correct');
-            } else if (i === selectedIndex) {
-                btn.classList.add('wrong');
-            }
+            btn.disabled = true;
+            if (correctOnes.includes(i)) btn.classList.add('correct');
+            else if (i === selectedIndex) btn.classList.add('wrong');
         });
 
         userAnswers[currentIndex] = { type: 'mcq', choice: selectedIndex, correct: isCorrect };
@@ -121,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('j-input-text');
         const val = input.value.trim();
         if (!val) return;
-        
         isAnswered = true;
         const q = questions[currentIndex];
         const correctStrings = Array.isArray(q.correct_answers) 
@@ -131,13 +134,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isCorrect = correctStrings.includes(val.toLowerCase());
         userAnswers[currentIndex] = { type: 'text', choice: val, correct: isCorrect };
 
+        input.disabled = true;
         if (isCorrect) {
             score++;
             input.style.backgroundColor = "#d4edda";
-            input.style.borderColor = "#28a745";
         } else {
             input.style.backgroundColor = "#f8d7da";
-            input.style.borderColor = "#dc3545";
             questionArea.insertAdjacentHTML('beforeend', `<p style="color:#dc3545; font-weight:bold; margin-top:10px;">Correct Answer: ${q.correct_answers[0]}</p>`);
         }
         finishStep(q);
@@ -153,13 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function finishStep(q) {
         document.getElementById('j-skip').style.display = 'none';
         if (document.getElementById('j-submit-text')) document.getElementById('j-submit-text').style.display = 'none';
-        
         if (q.explanation) {
             explanationArea.textContent = q.explanation;
             explanationArea.style.display = 'block';
             renderMath();
         }
-        
         btnNext.style.display = 'block';
         if (currentIndex === questions.length - 1) btnNext.textContent = "See Results";
         saveProgress();
@@ -171,24 +171,23 @@ document.addEventListener('DOMContentLoaded', () => {
         showQuestion(currentIndex);
     });
 
+    // --- RESULTADOS Y REVISIÓN ---
+
     function showResults() {
         clearInterval(timerInterval);
-        quizSetup.style.display = 'none';
+        if(quizSetup) quizSetup.style.display = 'none';
         resultsScreen.classList.remove('hidden');
-        
         const finalPercent = Math.round((score / questions.length) * 100);
         const scoreCircle = document.getElementById('score-display');
         scoreCircle.textContent = `${finalPercent}%`;
         
-        // Colores del círculo de puntuación
         if (finalPercent >= 80) scoreCircle.style.color = scoreCircle.style.borderColor = "#28a745";
         else if (finalPercent >= 50) scoreCircle.style.color = scoreCircle.style.borderColor = "#ffc107";
         else scoreCircle.style.color = scoreCircle.style.borderColor = "#dc3545";
 
         document.getElementById('result-text').textContent = `Score: ${score} out of ${questions.length}`;
         document.getElementById('time-result').textContent = `Total Time: ${timerDisplay.textContent}`;
-        
-        if (finalPercent === 100) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        if (finalPercent === 100 && typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         buildReview();
     }
 
@@ -198,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ans = userAnswers[i] || { type: 'skip', choice: null, correct: false };
             let userText = "Skipped", correctText = "";
 
-            if (q.options && (q.type === 'mcq' || q.type === 'true_false')) {
+            if (q.options) {
                 const cIndices = Array.isArray(q.correct_answers) ? q.correct_answers.map(Number) : [Number(q.correct_answers)];
                 correctText = cIndices.map(idx => q.options[idx] || "N/A").join(', ');
                 if (ans.type !== 'skip' && ans.choice !== null) userText = q.options[ans.choice] || "Unknown";
@@ -207,12 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (ans.type !== 'skip') userText = ans.choice;
             }
 
-            const statusClass = ans.type === 'skip' ? 'text-skipped' : (ans.correct ? 'text-success' : 'text-danger');
             const item = document.createElement('div');
             item.className = `review-item ${ans.correct ? 'is-correct' : (ans.type === 'skip' ? '' : 'is-wrong')}`;
             item.innerHTML = `
                 <span class="review-q">${i + 1}. ${q.question || q.text}</span>
-                <div class="review-ans">Your Answer: <span class="${statusClass}">${userText}</span></div>
+                <div class="review-ans">Your Answer: <span class="${ans.correct ? 'text-success' : 'text-danger'}">${userText}</span></div>
                 <div class="review-ans">Correct: <span class="text-success">${correctText}</span></div>
                 <button onclick="deepExplain(${i})" class="ai-btn" style="margin-top:10px; padding: 4px 8px; font-size:0.7rem;">🤖 Explain Question</button>
             `;
@@ -221,32 +219,74 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMath();
     }
 
+    // --- FUNCIONES GLOBALES (ACCESIBLES DESDE EL HTML) ---
+
     window.toggleReview = () => reviewContainer.classList.toggle('hidden');
     
     window.deepExplain = (idx) => {
         const q = questions[idx];
-        let correct;
-        if (q.options) {
-             const indices = Array.isArray(q.correct_answers) ? q.correct_answers.map(Number) : [Number(q.correct_answers)];
-             correct = indices.map(i => q.options[i]).join(', ');
-        } else {
-             correct = Array.isArray(q.correct_answers) ? q.correct_answers.join('/') : q.correct_answers;
-        }
-        const prompt = `Explain this question from my quiz:\n\nQuestion: "${q.question || q.text}"\nCorrect Answer: "${correct}"\n\nPlease provide a detailed explanation.`;
+        const correct = q.options ? (Array.isArray(q.correct_answers) ? q.correct_answers.map(i => q.options[i]).join(', ') : q.options[q.correct_answers]) : q.correct_answers;
+        const prompt = `Explain this question:\n\nQuestion: "${q.question || q.text}"\nCorrect Answer: "${correct}"\n\nPlease provide a detailed explanation.`;
         navigator.clipboard.writeText(prompt);
         alert("Prompt copied!");
     };
 
-    window.toggleRegenerate = () => document.getElementById('regenerate-container').classList.toggle('hidden');
     window.shareResults = (platform) => {
         const text = `I scored ${document.getElementById('score-display').textContent} on MrQuizzer! 🧠\nTry it: https://mrquizzer.piscinadeentropia.es`;
-        window.open(platform === 'whatsapp' ? `https://wa.me/?text=${encodeURIComponent(text)}` : `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+        const urls = {
+            whatsapp: `https://wa.me/?text=${encodeURIComponent(text)}`,
+            twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`
+        };
+        window.open(urls[platform], '_blank');
     };
+
+    window.copyToClipboard = () => {
+        navigator.clipboard.writeText(`MrQuizzer Score: ${document.getElementById('score-display').textContent}`);
+        alert("Score copied!");
+    };
+
     window.copyTestLink = () => {
-        const data = btoa(unescape(encodeURIComponent(sessionStorage.getItem('mrquizzer_data'))));
-        navigator.clipboard.writeText(`https://mrquizzer.piscinadeentropia.es/share.html?test=${data}`);
-        alert("Link copied!");
+        const encodedData = btoa(unescape(encodeURIComponent(sessionStorage.getItem('mrquizzer_data'))));
+        navigator.clipboard.writeText(`https://mrquizzer.piscinadeentropia.es/share.html?test=${encodedData}`);
+        alert("Test link copied!");
     };
+
+    window.toggleRegenerate = () => document.getElementById('regenerate-container').classList.toggle('hidden');
+
+    window.copyRegeneratePrompt = () => {
+        const oldQs = questions.map(q => q.question || q.text);
+        const source = localStorage.getItem('mrquizzer_source') || "Previous text";
+        const prompt = `Generate NEW questions based on: "${source}". DO NOT repeat these: ${JSON.stringify(oldQs)}. Use same JSON schema.`;
+        navigator.clipboard.writeText(prompt);
+        alert("Prompt copied!");
+        return prompt;
+    };
+
+    window.regeneratePrompt = (ai) => {
+        const prompt = window.copyRegeneratePrompt();
+        const encodedPrompt = encodeURIComponent(prompt);
+        
+        // Si el prompt es muy largo, usamos la URL base para evitar error 414
+        const baseUrl = ai === 'chatgpt' ? "https://chat.openai.com/" : "https://www.perplexity.ai/";
+        const fullUrl = ai === 'chatgpt' ? `https://chat.openai.com/?q=${encodedPrompt}` : `https://www.perplexity.ai/?q=${encodedPrompt}`;
+
+        if (encodedPrompt.length > 1800) {
+            alert("Source text is too large for the link. Prompt has been copied, just paste it (Ctrl+V) in the AI chat.");
+            window.open(baseUrl, '_blank');
+        } else {
+            window.open(fullUrl, '_blank');
+        }
+    };
+
+    document.getElementById('btn-load-new')?.addEventListener('click', () => {
+        try {
+            const newData = JSON.parse(document.getElementById('json-input-new').value);
+            if (newData.questions) {
+                sessionStorage.setItem('mrquizzer_data', JSON.stringify(newData));
+                window.clearProgressAndReload();
+            }
+        } catch (e) { alert("Invalid JSON"); }
+    });
 
     startTimer();
     showQuestion(currentIndex);
