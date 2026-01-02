@@ -1,6 +1,6 @@
 # README
 
-[!](./src/images/banner.png)
+![MrQuizzer Banner](./src/images/banner.png)
 
 ## Status
 
